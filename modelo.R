@@ -8,6 +8,9 @@ gerarLaudo = function(filepath) {
   df_imo <- pesquisa$imo
   df_dados_ini <- pesquisa$inicial
 
+  print(df_dados_ini)
+  print("AAAAAAAAAAAA")
+
   # Pega um vetor de caracteres que representam as transformações
   transformacoes <- pesquisa$transf
   indices <- pesquisa$indices
@@ -28,7 +31,7 @@ gerarLaudo = function(filepath) {
 
   df_info_basicas <- cbind(colnames(df_info), unlist(df_info))
 
-  cat_df(df_info_basicas) # !
+  # cat_df(df_info_basicas) # !
   #Numero de dados
   num_dados <- nrow(df_dados_ini)
   #Numero de dados utilizados
@@ -60,46 +63,46 @@ gerarLaudo = function(filepath) {
     num_du = num_ativo
   )
 
-  cat_df(
-    df_info_complementares,
-    colnames = c("Variáveis e dados do modelo", "Quant.")
-  )
+  # cat_df(
+  #   df_info_complementares,
+  #   colnames = c("Variáveis e dados do modelo", "Quant.")
+  # )
 
   ## Descrição das Variáveis
-  cat_df(df_vari, colnames(df_vari))
+  # cat_df(df_vari, colnames(df_vari))
 
   # Usa o pacote summarytools para criar uma descrição com minimo maximo e media dos dados
   df_estat_descr <- descr_avalitools(df_dados)
 
-  cat_df(
-    df_estat_descr,
-    colnames = colnames(df_estat_descr),
-    rownames = vari_uti
-  )
+  # cat_df(
+  #   df_estat_descr,
+  #   colnames = colnames(df_estat_descr),
+  #   rownames = vari_uti
+  # )
 
   df_sumario_avaliacao <- summary_avalitools(modelo_reg)
-  cat_df(df_sumario_avaliacao, colnames = colnames(df_sumario_avaliacao))
+  # cat_df(df_sumario_avaliacao, colnames = colnames(df_sumario_avaliacao))
 
   df_normalidade <- normality_table(modelo_reg)
-  cat_df(
-    df_normalidade,
-    c("Distribuição dos resíduos", "Curva Normal", "Modelo")
-  )
+  # cat_df(
+  #   df_normalidade,
+  #   c("Distribuição dos resíduos", "Curva Normal", "Modelo")
+  # )
 
   ## Outliers do Modelo de Regressão:
   df_outliers <- outliers_table(modelo_reg)
-  cat_df(df_outliers)
+  # cat_df(df_outliers)
 
   ## Análise de Variância:
   tabela_anova <- as_avaliation_anova(modelo_aov)
-  cat_df(tabela_anova, colnames = colnames(tabela_anova))
+  # cat_df(tabela_anova, colnames = colnames(tabela_anova))
 
   ## Equação de Regressão
 
   df_equacao_regrecao <- data.frame(
     x = regression_equation(modelo_reg, vari_uti, transformacoes)
   )
-  cat_df(df_equacao_regrecao)
+  # cat_df(df_equacao_regrecao)
 
   ## Funções Estimativa
   vetor <- estimate_equations(modelo_reg, vari_uti, transformacoes)
@@ -108,17 +111,17 @@ gerarLaudo = function(filepath) {
   }
 
   ### Função Estimativa (Moda)
-  cat_df(data.frame(vetor[1]))
-  cat_df(data.frame(vetor[2]))
-  cat_df(data.frame(vetor[3]))
+  # cat_df(data.frame(vetor[1]))
+  # cat_df(data.frame(vetor[2]))
+  # cat_df(data.frame(vetor[3]))
 
   ## Teste de Hipóteses (significância dos regressores)
   df_teste_sign <- ttests_table(modelo_reg, vari_uti)
-  cat_df(df_teste_sign, colnames = colnames(df_teste_sign))
+  # cat_df(df_teste_sign, colnames = colnames(df_teste_sign))
 
   ## Correlações Parciais Isoladas
   matriz_correlacao <- cor_avalitools(df_dados_trans, vari_uti)
-  cat_df(matriz_correlacao, colnames = colnames(matriz_correlacao))
+  # cat_df(matriz_correlacao, colnames = colnames(matriz_correlacao))
 
   ## Correlações Parciais Influência
   matriz_correlacao_influencia <- cor_avalitools(
@@ -126,14 +129,14 @@ gerarLaudo = function(filepath) {
     vari_uti,
     inf = TRUE
   )
-  cat_df(
-    matriz_correlacao_influencia,
-    colnames = colnames(matriz_correlacao_influencia)
-  )
+  # cat_df(
+  #   matriz_correlacao_influencia,
+  #   colnames = colnames(matriz_correlacao_influencia)
+  # )
 
   ## Tabela de Residuos
   tabela_residuos <- residuals_table(modelo_reg, df_dados_trans, indices)
-  cat_df(tabela_residuos, colnames = colnames(tabela_residuos))
+  # cat_df(tabela_residuos, colnames = colnames(tabela_residuos))
 
   ## Gráficos de Aderência e de resíduos da regressão:
   ### Aderência Observado x Estimado - Regressão Linear na forma direta
@@ -214,9 +217,11 @@ gerarLaudo = function(filepath) {
     filter(Tipo == "Texto")
   nomes_vari_texto <- nomes_vari_texto$Nome
 
+  print(df_vari)
+  # print(names(nomes_vari_texto))
   df_texto <- df_dados_ini %>% select(all_of(nomes_vari_texto))
 
-  cat_df(df_texto, colnames(df_texto))
+  # cat_df(df_texto, colnames(df_texto))
 
   ### Variáveis Numéricas
 
@@ -224,9 +229,13 @@ gerarLaudo = function(filepath) {
     filter(Tipo == "Numérica")
   nomes_vari_numerica <- nomes_vari_numerica$Nome
 
+  # Corrigir os nomes das colunas para corresponder aos do dataframe
+  nomes_vari_numerica <- gsub("Área", "Area", nomes_vari_numerica)
+
+  print(names(nomes_vari_numerica))
   df_numerica <- df_dados_ini %>% select(all_of(nomes_vari_numerica))
 
-  cat_df(df_numerica, colnames(df_numerica))
+  # cat_df(df_numerica, colnames(df_numerica))
 
   ## Estimativa de Valores
   vetor_novo <- df_imo %>%
@@ -246,18 +255,19 @@ gerarLaudo = function(filepath) {
     trans = transformacoes
   )
 
-  cat_df(df_estimativa, colnames = colnames(df_estimativa))
+  # cat_df(df_estimativa, colnames = colnames(df_estimativa))
 
   ## Dados do imóvel avaliando:
   nomes_vari_uti <- df_vari %>%
     filter(df_vari[[3]] != "Dependente")
   nomes_vari_uti <- nomes_vari_uti$Nome
-
+  # Corrigir os nomes das colunas para corresponder aos do dataframe
+  nomes_vari_uti <- gsub("Área", "Area", nomes_vari_uti)
   df_ini <- df_dados_ini %>% select(all_of(nomes_vari_uti))
 
   imo_table <- avali_table(df_imo, df_ini)
 
-  cat_df(imo_table, colnames = c("Variável", "Conteúdo", "Extrapolação"))
+  # cat_df(imo_table, colnames = c("Variável", "Conteúdo", "Extrapolação"))
   print("FEITO!")
 
   return(list(
@@ -270,3 +280,5 @@ gerarLaudo = function(filepath) {
     transformacoes = transformacoes
   ))
 }
+
+
