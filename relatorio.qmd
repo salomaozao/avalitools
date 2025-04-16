@@ -1,6 +1,6 @@
 ---
 title: "Relatório Estatístico"
-subtitle: "Relatório estatístico do modelo de regressão linear."
+subtitle: "Relatório estatístico do Model de regressão linear."
 tbl-colwidths: false
 format: 
   docx:
@@ -14,50 +14,52 @@ format:
 ---
 
 ```{r include = F}
-#Carregando Pacotes
-library(dplyr)
-library(ggplot2)
-library(ppcor)
-library(avalitools)
-library(readxl)
-library(corrgram)
-library(conflicted)
-library(knitr)
+
+#installing and loading required packages
+
+if(!require("pacman", quietly = T)){
+  install.packages("pacman")
+}
+
+pacman::p_load(dplyr, ggplot2, ppcor, avalitools, conflicted, knitr)
+
+#resolving possible conflict issues
 conflict_prefer("select", "dplyr")
 conflict_prefer("filter", "dplyr")
 
 ```
 
 ```{r echo = F}
-# Carrega pesquisa
-pesquisa <- read_avaliation(path = "pesquisa_curvelo.xlsx")
+# Loads research
+Research <- read_avaliation(path = "pesquisa_curvelo.xlsx")
 
 
-# Cria dataframes que representam a pesquisa
-df_vari <- pesquisa$vari
-df_dados <- pesquisa$dados
-df_info <- pesquisa$info
-df_imo <- pesquisa$imo
-df_dados_ini <- pesquisa$inicial
+# Assigns the search objects to data.frames
+Vars_df <- Research$vari
+ObservedData_df <- Research$dados
+ResearchInfos_df <- Research$info
+State_df <- Research$imo
+RawObservedData_df <- Research$inicial
 
 
-# Pega um vetor de caracteres que representam as transformações
-transformacoes <- pesquisa$transf
-indices <- pesquisa$indices
-indices <- indices$i
+# Assigns a vector of characters that represent the transformations
+# aplied in the variables
+VarsTransf <- Research$transf
+Index <- Research$indices
+Index <- Index$i
 
-# Aplica as transformações nos dados utilizados no calculo
-transformedData <- apply_transf(df = df_dados, trans = transformacoes)
+# Aplies the given transformatios in the ObservedData_df
+TransformedData_df <- apply_transf(df = ObservedData_df, trans = VarsTransf)
 
-# Calcula modelo de regressão e tabela anova
-modelo <- lm_avalitools(transformedData)
+# Fits the linear regression model to the TransformedData_df 
+Model <- lm_avalitools(TransformedData_df)
 
-# Atribui a dois objetos distintos os modelos
-modelo_reg <- modelo$modelo
-modelo_aov <- modelo$anova
+# Assingns the objects of the Model object to diferent variables
+ModelReg <- Model$modelo
+ModelAnova <- Model$anova
 
-# cria um resumo para o modelo de regressão linear
-sumario <- summary(modelo_reg)
+# Summarise the Regression model and atach to a variable
+SummaryReg <- summary(ModelReg)
 
 
 ```
@@ -65,171 +67,200 @@ sumario <- summary(modelo_reg)
 ## Informações Básicas
 
 ```{r echo = F}
-# Cria um data.frame com as informações básicas da pesquisa
-df_info_basicas <- cbind(colnames(df_info), unlist(df_info))
+# Reorganizes the table and attributes to a data.frame
+ResearchInfos_df<- cbind(colnames(ResearchInfos_df), unlist(ResearchInfos_df))
 
-cat_df(df_info_basicas)
+cat_df(ResearchInfos_df)
 
 ```
 
 ## Informações Complementares
 
 ```{r echo = F}
-#Numero de dados
-num_dados <- nrow(df_dados_ini)
-#Numero de dados utilizados
-num_ativo <- nrow(df_dados)
-#Numero de variaveis utilizadas
+#Number of observed Data
+DataObs_num <- nrow(RawObservedData_df)
+#Number of observed Data
+DataActive_num <- nrow(ObservedData_df)
 
-vari_num <- df_vari %>%
+
+# Names for the variables 
+NumericVars_names <- Vars_df %>%
   filter(Tipo == "Numérica") %>%
   select(Nome)
 
-NumericVars <- df_vari %>%
+NumericVars_names <- NumericVars_names$Nome
+
+NumericEnableVars_names <- Vars_df %>%
   filter(Tipo == "Numérica" & Habilitada == "Sim") %>%
   select(Nome)
 
-NumericVars <- NumericVars$Nome
+NumericEnableVars_names <- NumericEnableVars_names$Nome
 
+CharacterVars_names <- Vars_df %>%
+  filter(Tipo == "Texto")
 
-#Numero de variáveis utilizadas
-num_vari_uti <- length(NumericVars)
-#Numero de variaveis numericas
-num_vari_num <- nrow(vari_num)
+CharacterVars_names <- CharacterVars_names$Nome
 
-# Rotulos para as informações complementares
+#Number of Vars
+NumericVars_num <- length(NumericVars_names)
+#Number of Numeric Enabled Vars
+NumericEnableVars_num <- length(NumericEnableVars_names)
 
-df_info_complementares <- complementary_info(
-  num_v = num_vari_num,
-  num_vu = num_vari_uti,
-  num_d = num_dados,
-  num_du = num_ativo
+# Labels for additional information
+
+ResearchCompInfos_df <- complementary_info(
+  num_v = NumericVars_num,
+  num_vu = NumericEnableVars_num,
+  num_d = DataObs_num,
+  num_du = DataActive_num
 )
 
-# !
+# Prints the additional information about the Data
 cat_df(
-  df_info_complementares,
-  colnames = c("Variáveis e dados do modelo", "Quant.")
+  ResearchCompInfos_df,
+  colnames = c("Variáveis e dados do Model", "Quant.")
 )
 ```
 
 ## Descrição das Variáveis
 
 ```{r echo = F}
-cat_df(df_vari, colnames(df_vari))
+# Print the Variables table 
+cat_df(Vars_df, colnames(Vars_df))
 
 ```
 
 ## Estatísticas Descritivas
 
 ```{r echo = F}
-# Usa o pacote summarytools para criar uma descrição com minimo maximo e media dos dados
-df_estat_descr <- descr_avalitools(df_dados) # !
+# Create and print a description for each use variable in the model
 
 
-cat_df(df_estat_descr, colnames = colnames(df_estat_descr), rownames = NumericVars)
+DescrStats_df <- descr_avalitools(ObservedData_df)
+
+
+cat_df(DescrStats_df, colnames = colnames(DescrStats_df), rownames = NumericEnableVars_names)
 
 ```
 
-## Coeficientes de correlação, determinação e estatística F:
+## Coeficiente de correlação, determinação e estatística F:
 
 ```{r echo = F, warning=FALSE}
-df_sumario_avaliacao <- summary_avalitools(modelo_reg)
-cat_df(df_sumario_avaliacao, colnames = colnames(df_sumario_avaliacao)) # Coeficientes de reg
+# Create and print a summary for the Regression model
+
+SummaryReg_df <- summary_avalitools(ModelReg)
+cat_df(SummaryReg_df, colnames = colnames(SummaryReg_df))
 ```
 
 ## Normalidade dos resíduos
 
 ```{r echo = F}
-df_normalidade <- normality_table(modelo_reg) # TODO: automatizar
-cat_df(df_normalidade, c("Distribuição dos resíduos", "Curva Normal", "Modelo")) # Normalidade dos resíduos
+# Create and print a table about the Normality assumption 
+
+Normality_df <- normality_table(ModelReg) 
+cat_df(Normality_df, c("Distribuição dos resíduos", "Curva Normal", "Model"))
 ```
 
-## Outliers do Modelo de Regressão:
+## Outliers do Model de Regressão:
 
 ```{r echo = F}
-df_outliers <- outliers_table(modelo_reg)
-cat_df(df_outliers) # !
+# Create and print a table about the Outliers of the Regression Model
+
+Outliers_df <- outliers_table(ModelReg)
+cat_df(Outliers_df) # !
 ```
 
 ## Análise de Variância:
 
 ```{r echo = F}
-tabela_anova <- as_avaliation_anova(modelo_aov)
-cat_df(tabela_anova, colnames = colnames(tabela_anova)) # !
+# Create and print a table for the Anova test
+
+Anova_df <- as_avaliation_anova(ModelAnova)
+cat_df(Anova_df, colnames = colnames(Anova_df)) # !
 ```
 
 ## Equação de Regressão
 
 ```{r echo = F}
-df_equacao_regrecao <- data.frame(
-  x = regression_equation(modelo_reg, NumericVars, transformacoes)
+RegEquation_df <- data.frame(
+  x = regression_equation(ModelReg, NumericEnableVars_names, VarsTransf)
 )
-cat_df(df_equacao_regrecao)
+cat_df(RegEquation_df)
 ```
 
 
 ## Funções Estimativa
 
 ```{r echo = F}
-vetor <- estimate_equations(modelo_reg, NumericVars, transformacoes)
-if (length(vetor) != 3) {
-  vetor <- rep(vetor, 3)
+# Create an vector of the 3 equations for the parameters of interest
+
+
+EstimateEquation <- estimate_equations(ModelReg, NumericEnableVars_names, VarsTransf)
+if (length(EstimateEquation) != 3) {
+  EstimateEquation <- rep(EstimateEquation, 3)
 }
 ```
 
 ### Função Estimativa (Moda)
 
 ```{r echo = F}
-cat_df(data.frame(vetor[1]))
+cat_df(data.frame(EstimateEquation[1]))
 ```
 
 ### Função Estimativa (Mediana)
 
 ```{r echo = F}
-cat_df(data.frame(vetor[2]))
+cat_df(data.frame(EstimateEquation[2]))
 ```
 
 ### Função Estimativa (Média)
 
 ```{r echo = F}
-cat_df(data.frame(vetor[3]))
+cat_df(data.frame(EstimateEquation[3]))
 ```
 
 
 ## Teste de Hipóteses (significância dos regressores)
 
 ```{r echo = F}
-df_teste_sign <- ttests_table(modelo_reg, NumericVars)
-cat_df(df_teste_sign, colnames = colnames(df_teste_sign))
+# Create and print a table of tests for significance of the model variables
+
+SignfTtests_df <- ttests_table(ModelReg, NumericEnableVars_names)
+cat_df(SignfTtests_df, colnames = colnames(SignfTtests_df))
 ```
 
 ## Correlações Parciais Isoladas
 
 ```{r echo = F}
-matriz_correlacao <- cor_avalitools(transformedData, NumericVars)
-cat_df(matriz_correlacao, colnames = colnames(matriz_correlacao))
+# Create and print a isolate partial correlations matrix
+
+Corr_matrix <- cor_avalitools(TransformedData_df, NumericEnableVars_names)
+cat_df(Corr_matrix, colnames = colnames(Corr_matrix))
 ```
 
 ## Correlações Parciais Influência
 
 ```{r echo = F}
-matriz_correlacao_influencia <- cor_avalitools(
-  transformedData,
-  NumericVars,
+# Create and print a influenced partial correlations matrix
+
+CorrInf_matrix <- cor_avalitools(
+  TransformedData_df,
+  NumericEnableVars_names,
   inf = TRUE
 )
 cat_df(
-  matriz_correlacao_influencia,
-  colnames = colnames(matriz_correlacao_influencia)
+  CorrInf_matrix,
+  colnames = colnames(CorrInf_matrix)
 )
 ```
 
-## Tabela de Residuos
+## Tabela de Resíduos
 
 ```{r echo = F, warning=FALSE}
-tabela_residuos <- residuals_table(modelo_reg, transformedData, indices)
-cat_df(tabela_residuos, colnames = colnames(tabela_residuos))
+# Create and print measures for residuals assumption verification
+
+Residuals_df <- residuals_table(ModelReg, TransformedData_df, Index)
+cat_df(Residuals_df, colnames = colnames(Residuals_df))
 ```
 
 ## Gráficos de Aderência e de resíduos da regressão:
@@ -237,24 +268,29 @@ cat_df(tabela_residuos, colnames = colnames(tabela_residuos))
 ### Aderência Observado x Estimado - Regressão Linear na forma direta
 
 ```{r echo = F, warning=FALSE}
-inv_fun_response <- inverse_function(
-  fun = transformacoes[length(transformacoes)]
+
+
+RespInverseFun <- inverse_function(
+  fun = VarsTransf[length(VarsTransf)]
 )
 
-tabela_observado_estimado <- data.frame(
-  v1 = df_dados[[num_vari_uti]],
-  v2 = inv_fun_response(modelo_reg$fitted.values)
+ObsAndEstimate_df <- data.frame(
+  v1 = ObservedData_df[[NumericEnableVars_num]],
+  v2 = RespInverseFun(ModelReg$fitted.values)
 )
 
-segundo_modelo_reg <- lm(v2 ~ v1, data = tabela_observado_estimado)
 
-coeficientes <- segundo_modelo_reg$coefficients
+# Create a Regression model to estimate a line that represents
+#  the linear relation between the estimates and observations
+SecundaryModelReg <- lm(v2 ~ v1, data = ObsAndEstimate_df)
 
-ggplot(data = tabela_observado_estimado) +
+SecunRegCoef <- SecundaryModelReg$coefficients
+
+ggplot(data = ObsAndEstimate_df) +
   geom_point(aes(x = v1, y = v2), color = "blue", fill = "white") +
   geom_abline(col = "yellow") +
   geom_abline(
-    aes(slope = coeficientes[2], intercept = coeficientes[1]),
+    aes(slope = SecunRegCoef[2], intercept = SecunRegCoef[1]),
     col = "red"
   ) +
   labs(x = "Observado", y = "Estimado") +
@@ -267,21 +303,21 @@ ggplot(data = tabela_observado_estimado) +
   theme_bw()
 ```
 
-### Residuos da regressão linear
+### Resíduos da regressão linear
 
 ```{r echo = F, warning=FALSE}
-qme_ <- qme(modelo_reg)
+SigmaEstimate <- qme(ModelReg)
 
 
-tabela_estimado_residuo <- data.frame(
+EstimateAndResiduals_df <- data.frame(
   # !
-  est = modelo_reg$fitted.values,
-  res = modelo_reg$residuals / qme_
+  est = ModelReg$fitted.values,
+  res = ModelReg$residuals / SigmaEstimate
 ) %>%
   mutate(out = ifelse(res >= 2 | res <= -2, "Outlier", "Não outlier"))
 
 
-ggplot(tabela_estimado_residuo) +
+ggplot(EstimateAndResiduals_df) +
   geom_point(
     aes(x = est, y = res, fill = out),
     col = "blue4",
@@ -302,22 +338,22 @@ ggplot(tabela_estimado_residuo) +
 
 ```
 
-## Graficos de elasticidade da função no ponto médio
+## Gráficos de elasticidade da função no ponto médio
 
 ```{r echo = F, warning=FALSE}
-lista_elasticidade <- elasticity_plots(
+ElasticityPlots_list <- elasticity_plots(
   # !
-  modelo = modelo_reg,
-  df = df_dados,
-  trans = transformacoes,
-  NumericVars
+  modelo = ModelReg,
+  df = ObservedData_df,
+  trans = VarsTransf,
+  NumericEnableVars_names
 )
 
-for (i in 1:(ncol(df_dados) - 1)) {
-  print(lista_elasticidade[[i]])
+for (i in 1:(ncol(ObservedData_df) - 1)) {
+  print(ElasticityPlots_list[[i]])
 }
 
-class(df_sumario_avaliacao)
+class(SummaryReg_df)
 ```
 
 ## Tabela de Dados - Amostra:
@@ -325,26 +361,18 @@ class(df_sumario_avaliacao)
 ### Variáveis Texto
 
 ```{r echo = F}
-nomes_vari_texto <- df_vari %>%
-  filter(Tipo == "Texto")
-nomes_vari_texto <- nomes_vari_texto$Nome
+CharacterVars_df <- RawObservedData_df %>% select(all_of(CharacterVars_names))
 
-df_texto <- df_dados_ini %>% select(all_of(nomes_vari_texto))
-
-cat_df(df_texto, colnames(df_texto))
+cat_df(CharacterVars_df, colnames(CharacterVars_df))
 ```
 
 
 ### Variáveis Numéricas
 
 ```{r echo = F}
-nomes_vari_numerica <- df_vari %>%
-  filter(Tipo == "Numérica")
-nomes_vari_numerica <- nomes_vari_numerica$Nome
+NumericVars_df <- RawObservedData_df %>% select(all_of(NumericVars_names))
 
-df_numerica <- df_dados_ini %>% select(all_of(nomes_vari_numerica))
-
-cat_df(df_numerica, colnames(df_numerica))
+cat_df(NumericVars_df, colnames(NumericVars_df))
 ```
 
 
@@ -352,121 +380,120 @@ cat_df(df_numerica, colnames(df_numerica))
 ## Estimativa de Valores
 
 ```{r echo = F}
-vetor_novo <- df_imo %>%
+StateData_df <- State_df %>%
   filter(!is.na(Conteudo) | !is.numeric(Conteudo))
 
-vetor_novo <- vetor_novo$Conteudo
+StateData<- StateData_df$Conteudo
 
-novos <- matrix(vetor_novo, nrow = 1, ncol = length(vetor_novo))
+StateData <- matrix(StateData, nrow = 1, ncol = length(StateData))
 
-novos <- as.data.frame(novos)
+StateData <- as.data.frame(StateData)
 
-colnames(novos) <- paste("x", 1:ncol(novos), sep = "")
+colnames(StateData) <- paste("x", 1:ncol(StateData), sep = "")
 
 
-df_estimativa <- predict_avalitools(
-  df_novo = novos,
-  modelo = modelo_reg,
-  trans = transformacoes
+Estimate_df <- predict_avalitools(
+  df_novo = StateData,
+  modelo = ModelReg,
+  trans = VarsTransf
 )
 
 
-cat_df(df_estimativa, colnames = colnames(df_estimativa)) # !
+cat_df(Estimate_df, colnames = colnames(Estimate_df)) # !
 
 ```
 
 ## Dados do imóvel avaliando:
 
 ```{r echo = F}
-nomes_vari_uti <- df_vari %>%
-  filter(df_vari[[3]] != "Dependente")
-nomes_vari_uti <- nomes_vari_uti$Nome
 
-df_ini <- df_dados_ini %>% select(all_of(nomes_vari_uti))
+IndependentVars <- Vars_df %>%
+  filter(Vars_df[[3]] != "Dependente")
+IndependentVars <- IndependentVars$Nome
 
-imo_table <- avali_table(df_imo, df_ini)
+StateObs_df <- avali_table( State_df, RawObservedData_df[,IndependentVars] ) 
 
-cat_df(imo_table, colnames = c("Variável", "Contúdo", "Extrapolação"))
+cat_df(StateObs_df, colnames = c("Variável", "Contúdo", "Extrapolação"))
 
 ```
 
 
 
 ```{r}
-df_vari <- pesquisa$vari
-df_dados <- pesquisa$dados
-df_info <- pesquisa$info
-df_imo <- pesquisa$imo
-df_dados_ini <- pesquisa$inicial
+Vars_df <- Research$vari
+ObservedData_df <- Research$dados
+ResearchInfos_df <- Research$info
+State_df <- Research$imo
+RawObservedData_df <- Research$inicial
 
 
-#=====  DA PESQUISA
+#=====  DA Research
 
-cat_df(df_vari, colnames(df_vari))
-NumericVars <- df_vari %>%
+cat_df(Vars_df, colnames(Vars_df))
+NumericEnableVars_names <- Vars_df %>%
   filter(Tipo == "Numérica" & Habilitada == "Sim") %>%
   select(Nome)
 
 # Tabela de números de variáveis
-cat_df(df_estat_descr, colnames = colnames(df_estat_descr), rownames = NumericVars) # Tabela de variáveis 
+cat_df(DescrStats_df, colnames = colnames(DescrStats_df), rownames = NumericEnableVars_names) # Tabela de variáveis 
 
 
-df_estat_descr <- descr_avalitools(df_dados) # !
-cat_df(df_estat_descr, colnames = colnames(df_estat_descr), rownames = NumericVars)
+DescrStats_df <- descr_avalitools(ObservedData_df) # !
+cat_df(DescrStats_df, colnames = colnames(DescrStats_df), rownames = NumericEnableVars_names)
 
-df_info_basicas <- cbind(colnames(df_info), unlist(df_info))
+ResearchInfos_df_basicas <- cbind(colnames(ResearchInfos_df), unlist(ResearchInfos_df))
 
-cat_df(df_info_basicas)
+cat_df(ResearchInfos_df_basicas)
 
-#=====  DO MODELO
-modelo <- lm_avalitools(transformedData)
+#=====  DO Model
+Model <- lm_avalitools(TransformedData_df)
 
-# Atribui a dois objetos distintos os modelos
-modelo_reg <- modelo$modelo
-modelo_aov <- modelo$anova
+# Atribui a dois objetos distintos os Models
+ModelReg <- Model$Model
+ModelAnova <- Model$anova
 
-# cria um resumo para o modelo de regressão linear
-sumario <- summary(modelo_reg)
+# cria um resumo para o Model de regressão linear
+SummaryReg <- summary(ModelReg)
 
-df_sumario_avaliacao <- summary_avalitools(modelo_reg)
-cat_df(df_sumario_avaliacao, colnames = colnames(df_sumario_avaliacao)) # !
+SummaryReg_df <- summary_avalitools(ModelReg)
+cat_df(SummaryReg_df, colnames = colnames(SummaryReg_df)) # !
 
 cat_df(
-  normality_table(modelo_reg),
-  c("Distribuição dos resíduos", "Curva Normal", "Modelo")
+  normality_table(ModelReg),
+  c("Distribuição dos resíduos", "Curva Normal", "Model")
 )
 
-cat_df(outliers_table(modelo_reg))
+cat_df(outliers_table(ModelReg))
 
-cat_df(as_avaliation_anova(modelo_aov), colnames = colnames(tabela_anova)) # !
+cat_df(as_avaliation_anova(ModelAnova), colnames = colnames(Anova_df)) # !
 
 regretionEq_df <- data.frame(
-  x = regression_equation(modelo_reg, NumericVars, transformacoes)
+  x = regression_equation(ModelReg, NumericEnableVars_names, VarsTransf)
 )
 cat_df(regretionEq_df)
 
 
-df_sumario_avaliacao <- summary_avalitools(modelo_reg)
-cat_df(df_sumario_avaliacao, colnames = colnames(df_sumario_avaliacao)) # Coeficientes de reg
+SummaryReg_df <- summary_avalitools(ModelReg)
+cat_df(SummaryReg_df, colnames = colnames(SummaryReg_df)) # SecunRegCoef de reg
 
 #=====  DA ESTIMATIVA
 
-vetor <- estimate_equations(modelo_reg, NumericVars, transformacoes)
+EstimateEquation <- estimate_equations(ModelReg, NumericEnableVars_names, VarsTransf)
 
 
 #===== COMPLEMENTARES
 
-df_info_complementares <- complementary_info(
-  num_v = num_vari_num,
-  num_vu = num_vari_uti,
-  num_d = num_dados,
-  num_du = num_ativo
+ResearchInfos_df_complementares <- complementary_info(
+  num_v = NumericVars_names,
+  num_vu = NumericEnableVars_names,
+  num_d = DataObs_num,
+  num_du = DataActive_num
 )
 
 # !
 cat_df(
-  df_info_complementares,
-  colnames = c("Variáveis e dados do modelo", "Quant.")
+  ResearchInfos_df_complementares,
+  colnames = c("Variáveis e dados do Model", "Quant.")
 )
 #=====
 
