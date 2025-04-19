@@ -2,6 +2,8 @@
 title: "Relatório Estatístico"
 subtitle: "Relatório estatístico do modelo de regressão linear."
 tbl-colwidths: false
+params:
+  path: "nome.xlsx"
 format: 
   docx:
    reference-doc: custom-reference-doc.docx
@@ -31,7 +33,9 @@ conflict_prefer("filter", "dplyr")
 
 ```{r echo = F}
 # Load research
-research <- read_avaliation(path = "pesquisa_curvelo.xlsx")
+pathResearch <- params$path
+
+research <- read_avaliation(path = pathResearch)
 
 
 # Assign the search objects to data.frames
@@ -417,89 +421,4 @@ stateObs_df <- avali_table( state_df, rawObservedData_df[,independentVars] )
 
 cat_df(stateObs_df, colnames = c("Variável", "Contúdo", "Extrapolação"))
 
-```
-
-
-
-```{r}
-vars_df <- research$vari
-observedData_df <- research$dados
-researchInfos_df <- research$info
-state_df <- research$imo
-rawObservedData_df <- research$inicial
-
-
-#=====  DA research
-
-cat_df(vars_df, colnames(vars_df))
-numericEnableVars_names <- vars_df %>%
-  filter(Tipo == "Numérica" & Habilitada == "Sim") %>%
-  select(Nome)
-
-# Tabela de números de variáveis
-cat_df(descrStats_df, colnames = colnames(descrStats_df), rownames = numericEnableVars_names) # Tabela de variáveis 
-
-
-descrStats_df <- descr_avalitools(observedData_df) # !
-cat_df(descrStats_df, colnames = colnames(descrStats_df), rownames = numericEnableVars_names)
-
-ResearchInfos_df_basicas <- cbind(colnames(researchInfos_df), unlist(researchInfos_df))
-
-cat_df(ResearchInfos_df_basicas)
-
-#=====  DO model
-model <- lm_avalitools(transformedData_df)
-
-# Atribui a dois objetos distintos os Models
-modelReg <- model$model
-modelAnova <- model$anova
-
-# cria um resumo para o model de regressão linear
-summaryReg <- summary(modelReg)
-
-summaryReg_df <- summary_avalitools(modelReg)
-cat_df(summaryReg_df, colnames = colnames(summaryReg_df)) # !
-
-cat_df(
-  normality_table(modelReg),
-  c("Distribuição dos resíduos", "Curva Normal", "model")
-)
-
-cat_df(outliers_table(modelReg))
-
-cat_df(as_avaliation_anova(modelAnova), colnames = colnames(anova_df)) # !
-
-regretionEq_df <- data.frame(
-  x = regression_equation(modelReg, numericEnableVars_names, varsTransf)
-)
-cat_df(regretionEq_df)
-
-
-summaryReg_df <- summary_avalitools(modelReg)
-cat_df(summaryReg_df, colnames = colnames(summaryReg_df)) # secunRegCoef de reg
-
-#=====  DA ESTIMATIVA
-
-estimateEquation <- estimate_equations(modelReg, numericEnableVars_names, varsTransf)
-
-
-#===== COMPLEMENTARES
-
-ResearchInfos_df_complementares <- complementary_info(
-  num_v = numericVars_names,
-  num_vu = numericEnableVars_names,
-  num_d = dataObs_num,
-  num_du = dataActive_num
-)
-
-# !
-cat_df(
-  ResearchInfos_df_complementares,
-  colnames = c("Variáveis e dados do model", "Quant.")
-)
-#=====
-
-#=====
-#=====
-#=====
 ```
