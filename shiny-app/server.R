@@ -1,11 +1,8 @@
-library(shiny)
-library(avalitools)
-library(corrgram)
-library(ggplot2)
-library(ggcorrplot)
-library(rlang)
-library(quarto)
+if(!require("pacman", quietly = T)){
+  install.packages("pacman")
+}
 
+pacman::p_load (shiny,avalitools,ggcorrplot,rlang,quarto)
 
 
 # Lógica do servidor
@@ -54,6 +51,57 @@ shinyServer(function(input, output, session) {
     req(research())  # Garante que a pesquisa foi carregada
     rawObservedData_df()
   })
+
+
+  # Escolha Transformaçao
+
+
+  output$varsChoice <- renderDataTable({
+
+
+
+    transf  <- c("lnx","x", "1/x")
+
+    transf_matriz <- expand.grid(rep(list(transf), ncol(observedData_df()))) 
+
+
+    for (i in 1:nrow(transf_matriz)) {
+      
+      it_transf <- transf_matriz[i,]
+      
+      df_dados_transf <- apply_transf(observedData_df(), it_transf)
+      
+      modelo <- lm_avalitools(df_dados_transf)
+      
+      sumario <- summary(modelo$modelo)
+      coef_det_ajust <- sumario[[9]]
+      
+      coef_det_ajust <- as.numeric(coef_det_ajust)
+      sigma <- qme(modelo$modelo)
+
+      if (i == 1) {
+        matriz <- matrix(c(coef_det_ajust, sigma, it_transf), nrow = 1, ncol = (length(it_transf) + 2) )
+      }
+      else {
+        matriz <- rbind(matriz, c(coef_det_ajust, sigma, it_transf))
+      }
+      
+
+    }
+
+    matriz <- as.data.frame(matriz)
+
+    colnames(matriz) <- c("Determinação", "Sigma", paste0("v", 1:(ncol(matriz) - 2) ) )
+
+    matriz[[1]] <- as.numeric(matriz[[1]])
+    matriz[[2]] <- as.numeric(matriz[[2]])
+
+    matriz
+  })
+
+
+
+
 
 
   # Pressupostos
@@ -189,7 +237,7 @@ shinyServer(function(input, output, session) {
           lab = TRUE, 
           lab_size = 3, 
           colors = c("#6D9EC1", "white", "#E46726"),
-          title = "Matriz de Correlação - mtcars",
+          title = "Matriz de Correlação",
           ggtheme = theme_minimal())
 
 
@@ -207,7 +255,7 @@ shinyServer(function(input, output, session) {
           lab = TRUE, 
           lab_size = 3, 
           colors = c("#6D9EC1", "white", "#E46726"),
-          title = "Matriz de Correlação - mtcars",
+          title = "Matriz de Correlação com Influência",
           ggtheme = theme_minimal())
 
 

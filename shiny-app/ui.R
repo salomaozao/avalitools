@@ -1,5 +1,8 @@
-library(shiny)
-library(avalitools)
+if(!require("pacman", quietly = T)){
+  install.packages("pacman")
+}
+
+pacman::p_load (shiny,avalitools,ggcorrplot,rlang,quarto)
 
 
 
@@ -18,9 +21,21 @@ shinyUI(navbarPage("avalitools",
       br(),
       hr(),
       h4("Visualização dos dados carregados"),
-      dataTableOutput("summary")  # Use DT::dataTableOutput em vez de dataTableOutput
+      dataTableOutput("summary")  
     )
   ),
+
+  ## Pagina 2 Escolher variável ----
+
+  tabPanel("⚙️ Escolher Transformaçoes",
+
+      fluidPage(
+        dataTableOutput("varsChoice")
+      )
+
+
+  ),
+
 
   ## Página 2: Verificar Pressupostos ----
   tabPanel("📊 Verificar pressupostos",
