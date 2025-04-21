@@ -136,12 +136,9 @@ shinyServer(function(input, output, session) {
           filter(Tipo == "Numérica") %>%
           pull(Nome)
   
-        numericEnableVars_names <- vars_df() %>%
-          filter(Tipo == "Numérica", Habilitada == "Sim") %>%
-          pull(Nome)
-  
+        
         numericVars_num <- length(numericVars_names)
-        numericEnableVars_num <- length(numericEnableVars_names)
+        numericEnableVars_num <- length(numericEnableVars_names())
   
         df <- complementary_info(
           num_v = numericVars_num,
@@ -237,16 +234,13 @@ shinyServer(function(input, output, session) {
   output$corrOutput <- renderPlot({
     req(input$corrSel)
 
-    numericEnableVars_names <- vars_df() %>%
-          filter(Tipo == "Numérica", Habilitada == "Sim") %>%
-          pull(Nome)
     
     transformedData_it <- transformedData_df()
     
     switch(input$corrSel,
       "corr" = {
   
-        colnames(transformedData_it) <- numericEnableVars_names
+        colnames(transformedData_it) <- numericEnableVars_names()
         corr_matrix <- cor(transformedData_it)
         ggcorrplot(corr_matrix, 
           method = "circle", 
@@ -264,7 +258,7 @@ shinyServer(function(input, output, session) {
       "corrInf" = {
         
 
-        colnames(transformedData_it) <- numericEnableVars_names
+        colnames(transformedData_it) <- numericEnableVars_names()
         corrInf_matrix <- ppcor::pcor(transformedData_it)$estimate
         ggcorrplot(corrInf_matrix, 
           method = "circle", 
@@ -289,11 +283,8 @@ shinyServer(function(input, output, session) {
     req(input$var_x, input$var_y)
     observedData_it <- observedData_df()
 
-    numericEnableVars_names <- vars_df() %>%
-          filter(Tipo == "Numérica", Habilitada == "Sim") %>%
-          pull(Nome)
 
-    colnames(observedData_it) <- numericEnableVars_names
+    colnames(observedData_it) <- numericEnableVars_names()
     
     ggplot(data = observedData_it, aes(x = !!sym(input$var_x), y = !!sym(input$var_y)))+
       geom_point(color = "blue")+

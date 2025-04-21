@@ -1,9 +1,3 @@
-if(!require("pacman", quietly = T)){
-  install.packages("pacman")
-}
-
-pacman::p_load (shiny,avalitools,ggcorrplot,rlang,quarto)
-
 
 
 
