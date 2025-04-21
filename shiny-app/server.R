@@ -1,5 +1,14 @@
+library(conflicted)
+library(dplyr)
+library(avalitools)
+library(ggcorrplot)
+library(shiny)
+library(readxl)
+library(quarto)
+library(rlang)
 
-
+conflict_prefer("select", "dplyr")
+conflict_prefer("filter", "dplyr")
 
 # server logic
 shinyServer(function(input, output, session) {
@@ -41,8 +50,8 @@ shinyServer(function(input, output, session) {
   numericEnableVars_names <- reactive({
 
 
-    numericEnableVars_names <- vars_df() %>%
-      filter(Tipo == "Numérica", Habilitada == "Sim") %>%
+    numericEnableVars_names <- vars_df() |>
+      filter(Tipo == "Numérica", Habilitada == "Sim") |>
       pull(Nome)
 
   })
@@ -132,8 +141,8 @@ shinyServer(function(input, output, session) {
         dataObs_num <- nrow(rawObservedData_df())
         dataActive_num <- nrow(observedData_df())
   
-        numericVars_names <- vars_df() %>%
-          filter(Tipo == "Numérica") %>%
+        numericVars_names <- vars_df() |>
+          filter(Tipo == "Numérica") |>
           pull(Nome)
   
         
@@ -201,7 +210,7 @@ shinyServer(function(input, output, session) {
         estimateAndResiduals_df <- data.frame(
           est = modelReg()$fitted.values,
           res = modelReg()$residuals / sigmaEstimate
-        ) %>%
+        ) |>
           mutate(out = ifelse(res >= 2 | res <= -2, "Outlier", "Não outlier"))
         
         
@@ -242,7 +251,7 @@ shinyServer(function(input, output, session) {
   
         colnames(transformedData_it) <- numericEnableVars_names()
         corr_matrix <- cor(transformedData_it)
-        ggcorrplot(corr_matrix, 
+        opplot(corr_matrix, 
           method = "circle", 
           type = "lower", 
           lab = TRUE, 
@@ -304,7 +313,7 @@ shinyServer(function(input, output, session) {
     switch(input$projSel,
       "imoInfo" = {
         vars_it <- vars_df()
-        independentVars <- vars_it %>%
+        independentVars <- vars_it |>
           filter(vars_it[[3]] != "Dependente")
         independentVars <- independentVars$Nome
 
@@ -314,7 +323,7 @@ shinyServer(function(input, output, session) {
       },
       "proj" = {
         
-        stateData_df <- state_df() %>%
+        stateData_df <- state_df() |>
           filter(!is.na(Conteudo) & is.numeric(Conteudo))
 
         stateData<- stateData_df$Conteudo

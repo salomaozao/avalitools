@@ -19,11 +19,13 @@ format:
 
 #installing and loading required packages
 
-if(!require("pacman", quietly = T)){
-  install.packages("pacman")
-}
+library(dplyr)
+library(avalitools)
+library(ggplot2)
+library(conflicted)
+library(knitr)
+library(ppcor)
 
-pacman::p_load(dplyr, ggplot2, ppcor, avalitools, conflicted, knitr)
 
 #resolving possible conflict issues
 conflict_prefer("select", "dplyr")

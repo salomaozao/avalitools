@@ -1,0 +1,10 @@
+name: shiny-app-1
+title:
+username: marcioavb
+account: marcioavb
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14570707
+bundleId: 10152126
+url: https://marcioavb.shinyapps.io/shiny-app-1/
+version: 1
