@@ -2,13 +2,20 @@ if(!require("pacman", quietly = T)){
   install.packages("pacman")
 }
 
-pacman::p_load (shiny,avalitools,ggcorrplot,rlang,quarto)
+pacman::p_load (shiny,devtools,ggcorrplot,rlang,quarto)
+
+if(!require("avalitools", quietly = T)){
+  devtools::install_github("marcioavbatista/avalitools-package")
+}
 
 
-# Lógica do servidor
+
+# server logic
 shinyServer(function(input, output, session) {
+
+  #---- Loading Data
   research <- reactive({
-    req(input$file)  # Garante que o arquivo foi enviado
+    req(input$file)  # ensures the research file was sent
     path <- input$file$datapath
     read_avaliation(path = path)
   })
@@ -25,9 +32,29 @@ shinyServer(function(input, output, session) {
   varsTransf <- reactive({ research()$transf })
   index <- reactive({ research()$indices$i })
 
-  transformedData_df <- reactive({ req(observedData_df()); apply_transf(df = observedData_df(), trans = varsTransf()) })
+  transformedData_df <- reactive({ 
+    
+    req(observedData_df())
+    apply_transf(df = observedData_df(), trans = varsTransf()) 
+  
+  })
+
+
   # Fit the linear regression model to the transformedData_df 
-  model <- reactive({ req(transformedData_df()); lm_avalitools(transformedData_df()) })
+  model <- reactive({
+    req(transformedData_df())
+    lm_avalitools(transformedData_df()) 
+  })
+
+
+  numericEnableVars_names <- reactive({
+
+
+    numericEnableVars_names <- vars_df() %>%
+      filter(Tipo == "Numérica", Habilitada == "Sim") %>%
+      pull(Nome)
+
+  })
 
   # Assingn the objects of the model object to diferent variables
   modelReg <- reactive({ req(model()); model()$modelo })
@@ -36,27 +63,26 @@ shinyServer(function(input, output, session) {
 
 
   observe({
-    numericEnableVars_names <- vars_df() %>%
-          filter(Tipo == "Numérica", Habilitada == "Sim") %>%
-          pull(Nome)
-
-    updateSelectInput(session, "var_x", choices = numericEnableVars_names, selected = numericEnableVars_names[1])
-    updateSelectInput(session, "var_y", choices = numericEnableVars_names, selected = numericEnableVars_names[2])
+    updateSelectInput(session, "var_x",
+      choices = numericEnableVars_names(),
+      selected = numericEnableVars_names()[1])
+    
+    updateSelectInput(session, "var_y",
+      choices = numericEnableVars_names(),
+      selected = numericEnableVars_names()[2])
   })
 
-
-
-  # Exibição da tabela
+  # ---- Carregar Dados
   output$summary <- renderDataTable({
-    req(research())  # Garante que a pesquisa foi carregada
+    req(research())
     rawObservedData_df()
   })
 
 
-  # Escolha Transformaçao
+  # ---- Escolha Transformaçao
 
 
-  output$varsChoice <- renderDataTable({
+  output$transfTable <- renderDataTable({
 
 
 

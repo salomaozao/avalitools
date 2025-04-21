@@ -30,7 +30,7 @@ shinyUI(navbarPage("avalitools",
   tabPanel("⚙️ Escolher Transformaçoes",
 
       fluidPage(
-        dataTableOutput("varsChoice")
+        dataTableOutput("transfTable")
       )
 
 
