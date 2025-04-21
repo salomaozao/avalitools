@@ -1,12 +1,3 @@
-if(!require("pacman", quietly = T)){
-  install.packages("pacman")
-}
-
-pacman::p_load (shiny,devtools,ggcorrplot,rlang,quarto)
-
-if(!require("avalitools", quietly = T)){
-  devtools::install_github("marcioavbatista/avalitools-package")
-}
 
 
 
