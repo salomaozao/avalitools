@@ -21,8 +21,6 @@ shinyServer(function(input, output, session) {
   })
 
 
-  
-
   # Assign the search objects to data.frames
   vars_df <- reactive({ req(research()); research()$vari })
   observedData_df <- reactive({ req(research()); research()$dados })
@@ -32,6 +30,8 @@ shinyServer(function(input, output, session) {
   varsTransf <- reactive({ research()$transf })
   index <- reactive({ research()$indices$i })
 
+
+  # tranform variables to the assigned transformations
   transformedData_df <- reactive({ 
     
     req(observedData_df())
@@ -40,7 +40,7 @@ shinyServer(function(input, output, session) {
   })
 
 
-  # Fit the linear regression model to the transformedData_df 
+  # fit the linear regression model to the transformedData_df 
   model <- reactive({
     req(transformedData_df())
     lm_avalitools(transformedData_df()) 
@@ -56,7 +56,7 @@ shinyServer(function(input, output, session) {
 
   })
 
-  # Assingn the objects of the model object to diferent variables
+  # assingn the objects of the model object to diferent variables
   modelReg <- reactive({ req(model()); model()$modelo })
   modelAnova <- reactive({ req(model()); model()$anova })
 
@@ -130,8 +130,8 @@ shinyServer(function(input, output, session) {
 
 
 
-  # Pressupostos
-  ## Geral
+  # ---- Pressupostos
+    # ---- Geral
   output$geralOutput <- renderDataTable({
     req(input$geralSel)
   
@@ -166,7 +166,7 @@ shinyServer(function(input, output, session) {
   }, options = list(pageLength = 10, scrollX = TRUE))
   
 
-  ## Normalidade
+    # ---- Normalidade
   output$normOutput <- renderPlot({
     req(input$normSel)
   
@@ -238,7 +238,7 @@ shinyServer(function(input, output, session) {
     )
   })
 
-  ## Auto Correlacao
+    # ---- Auto Correlacao
 
   output$corrOutput <- renderPlot({
     req(input$corrSel)
@@ -286,7 +286,7 @@ shinyServer(function(input, output, session) {
   })
 
 
-  ## Variáveis
+    # ---- Variáveis
 
   output$varsPlot <- renderPlot({
     req(input$var_x, input$var_y)
@@ -304,7 +304,7 @@ shinyServer(function(input, output, session) {
 
 
 
-  ## Projeção 
+    # ---- Projeção 
 
 
   output$projOutput <- renderDataTable({
@@ -349,27 +349,27 @@ shinyServer(function(input, output, session) {
   }, options = list(pageLength = 10, scrollX = TRUE))
 
 
-  # Gerar o Relatorio
+  # ---- Gerar o Relatorio
 
 
   output$download <- downloadHandler(
     filename = function() {
-      paste0("relatorio_", Sys.Date(), ".docx")  # Nome do arquivo para download
+      paste0("relatorio_", Sys.Date(), ".docx")  # download file name
     },
     content = function(file) {
-      # Cria um diretório temporário para armazenar o arquivo durante o processo de renderização
+      # create a temporary dir to allocate the files between the render
       temp_dir <- tempdir()
   
-      # Caminhos temporários
+      # temp paths
       report_path <- file.path(temp_dir, "relatorio.qmd")
       reference_doc_path <- file.path(temp_dir, "custom-reference-doc.docx")
       output_path <- "relatorio.docx"  # Nome simples para o arquivo de saída, sem caminho
   
-      # Copia os arquivos necessários para o diretório temporário
+      # copy needed files to the temp paths
       file.copy("relatorio.qmd", report_path, overwrite = TRUE)
       file.copy("custom-reference-doc.docx", reference_doc_path, overwrite = TRUE)
   
-      # Renderiza o relatório no diretório temporário
+      # render "relatorio" in the temp dir
       quarto::quarto_render(
         input = report_path,
         output_file = output_path,  # Apenas o nome do arquivo
@@ -377,7 +377,7 @@ shinyServer(function(input, output, session) {
         execute_params = list(path = input$file$datapath)
       )
   
-      # Agora copia o arquivo gerado para o caminho onde o Shiny pode fornecer para download
+      #copy "relatorio" generated to the file that can be download by the user
       file.copy(output_path, file, overwrite = TRUE)
     }
   )

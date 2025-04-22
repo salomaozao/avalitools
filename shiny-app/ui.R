@@ -3,7 +3,7 @@
 
 shinyUI(navbarPage("avalitools",
 
-  ## Página 1: Carregar dados ----
+  ## page 1: Carregar dados ----
   tabPanel("📁 Carregar dados",
     fluidPage(
       titlePanel("Carregar dados da avaliação"),
@@ -19,7 +19,7 @@ shinyUI(navbarPage("avalitools",
     )
   ),
 
-  ## Pagina 2 Escolher variável ----
+  ## page 2 Escolher variável ----
 
   tabPanel("⚙️ Escolher Transformaçoes",
 
@@ -31,16 +31,16 @@ shinyUI(navbarPage("avalitools",
   ),
 
 
-  ## Página 2: Verificar Pressupostos ----
+  ## page 3: Verificar Pressupostos ----
   tabPanel("📊 Verificar pressupostos",
     fluidPage(
       titlePanel("Verificação dos Pressupostos da Regressão"),
       tabsetPanel(type = "pills",
 
-        ## Subaba: Geral
+        ## tab: Geral
         tabPanel("📌 Geral",
           fluidRow(
-            # Coluna lateral com seleção
+            # lateral column
             column(3,
               h4("Selecionar tabela"),
               radioButtons("geralSel", label = NULL,
@@ -53,19 +53,19 @@ shinyUI(navbarPage("avalitools",
               )
             ),
 
-            # Coluna principal com tabela exibida
+            # main column
             column(9,
               h4("Resultado"),
               dataTableOutput("geralOutput"),
               br()
             )
           )
-        ),  # <-- Aqui a vírgula foi adicionada para separar as abas
+        ),  
 
-        ## Subabas futuras
+        ## tab: Resíduos
         tabPanel("📈 Resíduos", 
           fluidRow(
-            # Coluna lateral com seleção
+            # lateral column
             column(3,
               h4("Selecionar gráfico"),
               radioButtons("normSel", label = NULL,
@@ -78,7 +78,7 @@ shinyUI(navbarPage("avalitools",
               )
             ),
 
-            # Coluna principal com tabela exibida
+            # main column
             column(9,
               h4("Resultado"),
               plotOutput("normOutput"),
@@ -87,9 +87,10 @@ shinyUI(navbarPage("avalitools",
           )
         ),
         
+        ## tab: Auto - Correlacao
         tabPanel("🔁 Auto-Correlação", 
           fluidRow(
-            # Coluna lateral com seleção
+            # lateral column
             column(3,
               h4("Selecionar tabela"),
               radioButtons("corrSel", label = NULL,
@@ -101,7 +102,7 @@ shinyUI(navbarPage("avalitools",
               )
             ),
 
-            # Coluna principal com tabela exibida
+            # main column
             column(9,
               h4("Resultado"),
               plotOutput("corrOutput"),
@@ -109,6 +110,8 @@ shinyUI(navbarPage("avalitools",
             )
           )
         ),
+
+        ## tab : Variáveis
         tabPanel("📊 Variáveis", 
           fluidPage(
             titlePanel("Gráfico Interativo com Seleção de Variáveis"),
@@ -128,9 +131,11 @@ shinyUI(navbarPage("avalitools",
             )
           )
         ),
+
+        ## tab: Projeçao
         tabPanel("📌 Projeção",
           fluidRow(
-            # Coluna lateral com seleção
+            # lateral column
             column(3,
               h4("Selecionar tabela"),
               radioButtons("projSel", label = NULL,
@@ -142,7 +147,7 @@ shinyUI(navbarPage("avalitools",
               )
             ),
 
-            # Coluna principal com tabela exibida
+            # main column
             column(9,
               h4("Resultado"),
               dataTableOutput("projOutput"),
@@ -154,14 +159,13 @@ shinyUI(navbarPage("avalitools",
     )
   ),
 
-  ## Página 3: Relatório ----
+  ## page 3: Relatório ----
   tabPanel("📝 Gerar relatório",
     fluidPage(
       titlePanel("Gerar Relatório"),
       p("Aqui você pode exportar os resultados para um arquivo .docx."),
       downloadButton("download", "Gere o Relatorio!")
 
-      # Conteúdo futuro aqui
     )
   )
 ))
